@@ -8,6 +8,23 @@ module ActiveRecord
         it "should truncate the table"
       end
     end
+
+    [MysqlAdapter].each do |adapter|
+      describe adapter, "#truncatable_tables" do
+        it "should return tables if views are not supported"
+        it "should return base tables if views are supported"
+      end
+
+      describe adapter, "#base_tables" do
+        it "should return BASE tables"
+      end
+    end
+
+    [SQLite3Adapter, JdbcAdapter, PostgreSQLAdapter].each do |adapter|
+      describe adapter, "#truncatable_tables" do
+        it "should return tables"
+      end
+    end
   end
 end
 
@@ -22,7 +39,7 @@ module DatabaseCleaner
       end
 
       it "should truncate all tables except for schema_migrations" do
-        @connection.stub!(:tables).and_return(%w[schema_migrations widgets dogs])
+        @connection.stub!(:truncatable_tables).and_return(%w[schema_migrations widgets dogs])
 
         @connection.should_receive(:truncate_table).with('widgets')
         @connection.should_receive(:truncate_table).with('dogs')
@@ -32,7 +49,7 @@ module DatabaseCleaner
       end
 
       it "should only truncate the tables specified in the :only option when provided" do
-        @connection.stub!(:tables).and_return(%w[schema_migrations widgets dogs])
+        @connection.stub!(:truncatable_tables).and_return(%w[schema_migrations widgets dogs])
 
         @connection.should_receive(:truncate_table).with('widgets')
         @connection.should_not_receive(:truncate_table).with('dogs')
@@ -41,7 +58,7 @@ module DatabaseCleaner
       end
 
       it "should not truncate the tables specified in the :except option" do
-        @connection.stub!(:tables).and_return(%w[schema_migrations widgets dogs])
+        @connection.stub!(:truncatable_tables).and_return(%w[schema_migrations widgets dogs])
 
         @connection.should_receive(:truncate_table).with('dogs')
         @connection.should_not_receive(:truncate_table).with('widgets')

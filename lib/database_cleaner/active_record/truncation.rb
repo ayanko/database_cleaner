@@ -6,6 +6,9 @@ module ActiveRecord
   module ConnectionAdapters
 
     class AbstractAdapter
+      def truncatable_tables
+        self.tables
+      end
     end
 
     class SQLiteAdapter < AbstractAdapter
@@ -14,6 +17,18 @@ module ActiveRecord
     class MysqlAdapter < AbstractAdapter
       def truncate_table(table_name)
         execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
+      end
+
+      def base_tables(name = nil)
+        tables = []
+        result = execute("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'", name)
+        result.each { |field| tables << field[0] }
+        result.free
+        tables
+      end
+
+      def truncatable_tables
+        self.supports_views? ? self.base_tables : self.tables
       end
     end
 
@@ -82,7 +97,7 @@ module DatabaseCleaner::ActiveRecord
     private
 
     def tables_to_truncate
-      (@only || connection.tables) - @tables_to_exclude
+      (@only || connection.truncatable_tables) - @tables_to_exclude
     end
 
     def connection

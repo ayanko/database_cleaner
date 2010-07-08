@@ -28,7 +28,7 @@ module ActiveRecord
       end
 
       def truncatable_tables
-        self.supports_views? ? self.base_tables : self.tables
+        supports_views? ? self.base_tables : self.tables
       end
     end
 

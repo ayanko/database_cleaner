@@ -19,6 +19,10 @@ module ActiveRecord
         execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
       end
 
+      def purge_table(table_name)
+        execute("DELETE FROM #{quote_table_name(table_name)};")
+      end
+
       def base_tables(name = nil)
         tables = []
         result = execute("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'", name)
@@ -36,6 +40,10 @@ module ActiveRecord
       def truncate_table(table_name)
         execute("DELETE FROM #{quote_table_name(table_name)};")
       end
+
+      def purge_table(table_name)
+        execute("DELETE FROM #{quote_table_name(table_name)};")
+      end
     end
 
     class JdbcAdapter < AbstractAdapter
@@ -45,6 +53,10 @@ module ActiveRecord
         rescue ActiveRecord::StatementInvalid
           execute("DELETE FROM #{quote_table_name(table_name)};")
         end
+      end
+
+      def purge_table(table_name)
+        execute("DELETE FROM #{quote_table_name(table_name)};")
       end
     end
 
@@ -65,17 +77,28 @@ module ActiveRecord
         execute("TRUNCATE TABLE #{quote_table_name(table_name)} #{self.class.cascade};")
       end
 
+      def purge_table(table_name)
+        execute("DELETE FROM #{quote_table_name(table_name)};")
+      end
     end
 
     class SQLServerAdapter < AbstractAdapter
       def truncate_table(table_name)
         execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
       end
+
+      def purge_table(table_name)
+        execute("DELETE FROM #{quote_table_name(table_name)};")
+      end
     end
 
     class OracleEnhancedAdapter < AbstractAdapter
       def truncate_table(table_name)
         execute("TRUNCATE TABLE #{quote_table_name(table_name)}")
+      end
+
+      def purge_table(table_name)
+        execute("DELETE FROM #{quote_table_name(table_name)};")
       end
     end
 
@@ -89,7 +112,7 @@ module DatabaseCleaner::ActiveRecord
     def clean
       connection.disable_referential_integrity do
         tables_to_truncate.each do |table_name|
-          connection.truncate_table table_name
+          connection.send table_truncation_method, table_name
         end
       end
     end
@@ -98,6 +121,10 @@ module DatabaseCleaner::ActiveRecord
 
     def tables_to_truncate
       (@only || connection.truncatable_tables) - @tables_to_exclude
+    end
+
+    def table_truncation_method
+      @empty_table_method ||= "#{@method}_table"
     end
 
     def connection

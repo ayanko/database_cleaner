@@ -7,6 +7,10 @@ module ActiveRecord
       describe adapter, "#truncate_table" do
         it "should truncate the table"
       end
+      
+      describe adapter, "#purge_table" do
+        it "should purge the table"
+      end
     end
 
     [MysqlAdapter].each do |adapter|
@@ -74,6 +78,16 @@ module DatabaseCleaner
 
       it "should raise an error when invalid options are provided" do
         running { Truncation.new(:foo => 'bar') }.should raise_error(ArgumentError)
+      end
+      
+      it "should raise an error when invalid method option is provided" do
+        running { Truncation.new(:method => :bla) }.should raise_error(ArgumentError)
+      end
+     
+      [:truncate, :purge].each do |method_name| 
+        it "should NOT raise an error when #{method_name} method option is provided" do
+          running { Truncation.new(:method => method_name) }.should_not raise_error(ArgumentError)
+        end
       end
 
 

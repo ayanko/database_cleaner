@@ -26,8 +26,26 @@ With the :truncation strategy you can also pass in options, for example:
   DatabaseCleaner.strategy = :truncation, {:except => %w[widgets]}
 </pre>
 
+<pre>
+  DatabaseCleaner.strategy = :truncation, {:except => %w[widgets], :method => :purge}
+</pre>
+
+<pre>
+  DatabaseCleaner.strategy = :truncation, {:method => :truncate}
+</pre>
+
 (I should point out the truncation strategy will never truncate your schema_migrations table.)
 
+Truncation strategy options:
+
+ * only - array of tables to be truncated
+ * except - array of tables that will be excluded from truncation
+ * method:
+  * :truncate - will use TRUNCATE TABLE sql
+  * :purge    - will use DELETE FROM sql
+
+With :purge option truncation are faster then with :truncate.
+(especially if you have hundred or more tables)
 
 Some strategies require that you call DatabaseCleaner.start before calling clean
 (for example the :transaction one needs to know to open up a transaction). So
